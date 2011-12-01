@@ -1,0 +1,88 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="config.xsd">
+	<global collect-modified-files="true" 
+			client-default="iexplore"
+			client-default-visit-time="30"
+			capture-network-packets-malicious="false"
+			capture-network-packets-benign="false"
+			revert-after-each-url="true"
+			send-exclusion-lists="true"
+			terminate="false"
+        		group_size="1"
+			vm_stalled_after_revert_timeout="60"
+            revert_timeout="90"
+            client_inactivity_timeout="90"
+            vm_stalled_during_operation_timeout="120"
+            same_vm_revert_delay="20"
+            different_vm_revert_delay="60"
+	/>
+
+        <exclusion-list monitor="file" file="FileMonitor.exl" />
+        <exclusion-list monitor="process" file="ProcessMonitor.exl" />
+        <exclusion-list monitor="registry" file="RegistryMonitor.exl" />
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.2" vmsid="10.1.1.2">
+                <virtual-machine vm-path="winxp-1" vmid="10.1.1.2"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.3" vmsid="10.1.1.3">
+                <virtual-machine vm-path="winxp-2" vmid="10.1.1.3"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.4" vmsid="10.1.1.4">
+                <virtual-machine vm-path="winxp-3" vmid="10.1.1.4"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.5" vmsid="10.1.1.5">
+                <virtual-machine vm-path="winxp-4" vmid="10.1.1.5"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.6" vmsid="10.1.1.6">
+                <virtual-machine vm-path="winxp-5" vmid="10.1.1.6"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.7" vmsid="10.1.1.7">
+                <virtual-machine vm-path="winxp-6" vmid="10.1.1.7"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.8" vmsid="10.1.1.8">
+                <virtual-machine vm-path="winxp-7" vmid="10.1.1.8"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.9" vmsid="10.1.1.9">
+                <virtual-machine vm-path="winxp-8" vmid="10.1.1.9"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.10" vmsid="10.1.1.10">
+                <virtual-machine vm-path="winxp-9" vmid="10.1.1.10"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.11" vmsid="10.1.1.11">
+                <virtual-machine vm-path="winxp-10" vmid="10.1.1.11"/>
+        </virtual-machine-server>
+<!--
+        <virtual-machine-server type="vbox-server" address="10.1.1.12" vmsid="10.1.1.12">
+                <virtual-machine vm-path="winxp-11" vmid="10.1.1.12"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.13" vmsid="10.1.1.13">
+                <virtual-machine vm-path="winxp-12" vmid="10.1.1.13"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.14" vmsid="10.1.1.14">
+                <virtual-machine vm-path="winxp-13" vmid="10.1.1.14"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.15" vmsid="10.1.1.15">
+                <virtual-machine vm-path="winxp-14" vmid="10.1.1.15"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.16" vmsid="10.1.1.16">
+                <virtual-machine vm-path="winxp-15" vmid="10.1.1.16"/>
+        </virtual-machine-server>
+
+        <virtual-machine-server type="vbox-server" address="10.1.1.17" vmsid="10.1.1.17">
+                <virtual-machine vm-path="winxp-16" vmid="10.1.1.17"/>
+        </virtual-machine-server>
+-->
+</config>

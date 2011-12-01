@@ -1,0 +1,329 @@
+package pl.nask.hsn.capture.server;
+
+import java.util.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.security.InvalidParameterException;
+import java.net.URLEncoder;
+import java.net.URLDecoder;
+import java.io.*;
+
+public class UrlGroup extends Observable {
+    private URL_GROUP_STATE urlGroupState;
+    private List<Url> urlList = new ArrayList<Url>();
+    private String clientProgram = ConfigManager.getInstance().getConfigOption("client-default");
+    private int visitTime = 5;
+    private int identifier;
+    private boolean initialGroup = true;
+    private int errorCount = 0;
+    private BufferedWriter logFile;
+    private String processingIP;
+    private int retryCount;
+    private static Random generator = new Random();
+    private boolean malicious;
+    private ERROR_CODES majorErrorCode = ERROR_CODES.OK;
+    private Date visitStartTime;
+    private Date visitFinishTime;
+    private String algorithm = "";
+    private org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(UrlGroup.class);
+
+    public UrlGroup(List<Url> urlList, boolean initialGroup) {
+        urlGroupState = URL_GROUP_STATE.NONE;
+        generateIdentifier();
+        this.initialGroup = initialGroup;
+        this.urlList = urlList;
+
+        if (urlList.size() == 0) {
+            throw new InvalidParameterException("Cant create url group with size 0.");
+        }
+
+        Url firstUrl = urlList.get(0);
+        this.clientProgram = firstUrl.getClientProgram();
+        this.visitTime = firstUrl.getVisitTime();
+        this.retryCount = 0;
+        for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+            Url url = iterator.next();
+            url.setGroupId(identifier);
+            url.setInitialGroup(initialGroup);
+            url.setProcessingIP(processingIP);
+            url.setRetryCount(retryCount);
+            if (!this.clientProgram.equals(url.getClientProgram())) {
+                logger.error("Invalid url group. Different client program. Setting to " + this.clientProgram);
+            }
+            if (this.visitTime != url.getVisitTime()) {
+                logger.error("Invalid url group. Different visit times. Setting to " + this.visitTime);
+            }
+        }
+    }
+
+    public void generateIdentifier() {
+        // this.identifier = generator.nextInt();
+        this.identifier = this.hashCode();
+    }
+
+    /**
+     * @param uri - url encoded URL. However, because encoding might have slight differences, we will decode and encode
+     */
+    public Url getUrl(String uri) {
+        try {
+            String decodedURI = URLDecoder.decode(uri, "UTF-8");
+            String encodedURI = URLEncoder.encode(decodedURI, "UTF-8");
+
+
+            for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+                Url url = iterator.next();
+                if (url.getEscapedUrl().equalsIgnoreCase(encodedURI)) {
+                    return url;
+                }
+            }
+
+            logger.error("URL " + encodedURI + " not found. Looking through group " + identifier + ".");
+            for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+                Url url = iterator.next();
+                logger.info("URL: " + url.getEscapedUrl());
+            }
+            throw new NullPointerException("Unable to find Url " + uri + ".");
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Exception: ", e);
+            throw new NullPointerException("Unable to find Url " + uri + ".");
+        }
+    }
+
+    public void setUrlGroupState(URL_GROUP_STATE newState) {
+        urlGroupState = newState;
+        if (urlGroupState == URL_GROUP_STATE.ERROR) {
+            errorCount++;
+        }
+
+        for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+            Url url = iterator.next();
+            if (urlGroupState == URL_GROUP_STATE.VISITING) {
+
+                url.setUrlState(URL_STATE.VISITING);
+            } else if (urlGroupState == URL_GROUP_STATE.VISITED) {
+                if (url.getMajorErrorCode() == ERROR_CODES.OK) {
+                    url.setUrlState(URL_STATE.VISITED);
+                } else {
+                    url.setUrlState(URL_STATE.ERROR);
+                }
+            } else if (urlGroupState == URL_GROUP_STATE.ERROR) {
+                if (url.getMajorErrorCode() == ERROR_CODES.OK) {
+                    url.setMajorErrorCode(this.majorErrorCode.errorCode);
+                }
+                url.setUrlState(URL_STATE.ERROR);
+
+            }
+        }
+
+        this.setChanged();
+        this.notifyObservers();
+    }
+
+
+    public int getErrorCount() {
+        return errorCount;
+    }
+
+    public URL_GROUP_STATE getUrlGroupState() {
+        return urlGroupState;
+    }
+
+    public String toVisitEvent() {
+        String urlGroupEvent = "<visit-event ";
+        urlGroupEvent += "identifier=\"" + identifier + "\" program=\"" + clientProgram + "\" time=\"" + visitTime + "\">";
+        for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+            Url url = iterator.next();
+            urlGroupEvent += "<item url=\"" + url.getEscapedUrl() + "\"/>";
+        }
+        urlGroupEvent += "</visit-event>";
+        return urlGroupEvent;
+    }
+
+    public int size() {
+        return urlList.size();
+    }
+
+
+    public void writeEventToLog(Map<String, String> urlCSVMap) {
+        for (Iterator<Url> urlIterator = urlList.iterator(); urlIterator.hasNext();) {
+            Url url = urlIterator.next();
+            String csv = urlCSVMap.get(url.getUrl());
+            if (csv == null || csv.equals("")) {
+                logger.warn("Couldnt find csv for URL " + url.getUrl());
+            } else {
+                url.writeEventToLog(csv);
+            }
+
+        }
+    }
+
+    public void writeEventToLog(String event) {
+        if (urlList.size() == 1) {
+            Url url = urlList.get(0);
+            url.writeEventToLog(event);
+        } else {
+            try {
+                if (logFile == null) {
+                    String logFileName = urlList.get(0).getId() + "_" + this.getLogfileDate(visitStartTime.getTime());
+                    File log = new File("log" + File.separator + "changes" + File.separator + logFileName + ".log");
+                    log.createNewFile();
+                    log.setReadable(true, false);
+                    logFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(log), "UTF-8"));
+                }
+
+
+                logFile.write(event);
+                logFile.flush();
+            } catch (UnsupportedEncodingException e) {
+                logger.error("Exception: ", e);
+            } catch (IOException e) {
+                logger.error("Exception: ", e);
+            }
+        }
+    }
+
+
+    private String getLogfileDate(long time) {
+        SimpleDateFormat sf = new SimpleDateFormat("ddMMyyyy_HHmmss");
+        return sf.format(new Date(time));
+    }
+
+    public int getIdentifier() {
+        return identifier;
+    }
+
+    public void setMalicious(String algorithm, boolean malicious, Map<String, String> urlMaliciousMap) {
+
+        this.malicious = malicious;
+        if (!algorithm.equals("bulk")) {
+            if (!this.malicious) {
+                for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+                    Url url = iterator.next();
+                    url.setMalicious(false);
+                }
+            } else {
+                if (size() == 1) {
+                    Url url = urlList.get(0);
+                    url.setMalicious(true);
+                }
+            }
+        } else {
+            for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+                Url url = iterator.next();
+                if (urlMaliciousMap == null) {
+                    url.setMalicious(malicious);
+                } else {
+                    String stateChanges = urlMaliciousMap.get(url.getUrl().toString());
+                    if (stateChanges.equals("")) {
+                        url.setMalicious(false);
+                    } else {
+                        url.setMalicious(true);
+                    }
+                }
+            }
+
+        }
+
+    }
+
+    public boolean isMalicious() {
+        return this.malicious;
+    }
+
+    public void setMajorErrorCode(long majorErrorCode) {
+        boolean validErrorCode = false;
+
+        for (ERROR_CODES e : ERROR_CODES.values()) {
+            if (majorErrorCode == e.errorCode) {
+                validErrorCode = true;
+                this.majorErrorCode = e;
+            }
+        }
+
+        if (!validErrorCode) {
+            logger.error("Received invalid error code from client " + majorErrorCode);
+            this.majorErrorCode = ERROR_CODES.INVALID_ERROR_CODE_FROM_CLIENT;
+        }
+    }
+
+    public String getGroupAsFileName() {
+        if (size() == 1) {
+            Url url = urlList.get(0);
+            return url.getUrlAsFileName();
+        } else {
+            return identifier + "";
+        }
+    }
+
+    public List<Url> getUrlList() {
+        return urlList;
+    }
+
+
+    public ERROR_CODES getMajorErrorCode() {
+        if (majorErrorCode == null) {
+            return ERROR_CODES.OK;
+        }
+        return majorErrorCode;
+    }
+
+    public void setVisitStartTime(String visitStartTime) {
+        try {
+            SimpleDateFormat sf = new SimpleDateFormat("d/M/yyyy H:m:s.S");
+            this.visitStartTime = sf.parse(visitStartTime);
+        } catch (ParseException e) {
+            logger.error("Exception: ", e);
+        }
+    }
+
+    public void setVisitFinishTime(String visitFinishTime) {
+        try {
+            SimpleDateFormat sf = new SimpleDateFormat("d/M/yyyy H:m:s.S");
+            this.visitFinishTime = sf.parse(visitFinishTime);
+        } catch (ParseException e) {
+            logger.error("Exception: ", e);
+        }
+    }
+
+    public void setInitialGroup(boolean b) {
+        initialGroup = b;
+        for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+            Url url = iterator.next();
+            url.setInitialGroup(b);
+        }
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public String getProcessingIP() {
+        return processingIP;
+    }
+
+    public void setProcessingIP(String processingIP) {
+        this.processingIP = processingIP;
+        for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+            Url url = iterator.next();
+            url.setProcessingIP(processingIP);
+        }
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
+        for (Iterator<Url> iterator = urlList.iterator(); iterator.hasNext();) {
+            Url url = iterator.next();
+            url.setRetryCount(retryCount);
+        }
+    }
+
+
+}

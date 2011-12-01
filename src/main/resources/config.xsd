@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- version 2.5 -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="config">
+    	<xs:complexType>
+    		<xs:sequence>
+    			<xs:element ref="global" minOccurs="1" maxOccurs="1"></xs:element>
+    			<xs:element ref="exclusion-list" minOccurs="0" maxOccurs="unbounded"></xs:element>
+    			<xs:element ref="preprocessor" minOccurs="0" maxOccurs="1"></xs:element>
+                <xs:element ref="virtual-machine-server" minOccurs="0" maxOccurs="unbounded"></xs:element>
+    		</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+
+    <xs:element name="virtual-machine">
+    	<xs:complexType>
+
+    		<xs:attribute name="vm-path" type="xs:string" use="required"></xs:attribute>
+		<xs:attribute name="vmid" type="xs:string" use="required"></xs:attribute>
+    	</xs:complexType>
+    </xs:element>
+
+    <xs:element name="exclusion-list">
+    	<xs:complexType>
+    		<xs:attribute name="monitor" type="xs:string" use="required"></xs:attribute>
+    		<xs:attribute name="file" type="xs:string" use="required"></xs:attribute>
+    	</xs:complexType>
+    </xs:element>
+
+    <xs:element name="virtual-machine-server">
+    	<xs:complexType>
+    		<xs:sequence>
+    			<xs:element ref="virtual-machine" maxOccurs="unbounded"
+    				minOccurs="1">
+    			</xs:element>
+    		</xs:sequence>
+    		<xs:attribute name="type" type="xs:string" use="required"></xs:attribute>
+    		<xs:attribute name="address" type="xs:string" use="required"></xs:attribute>
+		<xs:attribute name="vmsid" type="xs:string" use="required"></xs:attribute>
+
+    		<xs:anyAttribute processContents="lax"></xs:anyAttribute>
+    	</xs:complexType>
+    </xs:element>
+
+    <xs:element name="preprocessor">
+        <xs:complexType  mixed="true">
+    		<xs:attribute name="classname" type="xs:string" use="required"></xs:attribute>
+        </xs:complexType>
+
+    </xs:element>
+
+    <xs:element name="global">
+    	<xs:complexType>
+    		<xs:attribute name="collect-modified-files" type="xs:boolean" use="required"></xs:attribute>
+			<xs:attribute name="client-default" type="xs:string" use="required"></xs:attribute>
+    		<xs:attribute name="client-default-visit-time" type="xs:integer" use="required"></xs:attribute>
+    		<xs:attribute name="capture-network-packets-malicious" type="xs:boolean" use="required"></xs:attribute>
+			<xs:attribute name="capture-network-packets-benign" type="xs:boolean" use="required"></xs:attribute>
+		<xs:attribute name="revert-after-each-url" type="xs:boolean" use="required"></xs:attribute>
+    		<xs:attribute name="terminate" type="xs:boolean" use="required"></xs:attribute>
+            <xs:attribute name="send-exclusion-lists" type="xs:boolean" use="required"></xs:attribute>
+            <xs:attribute name="group_size" type="xs:integer" use="required"></xs:attribute>
+			<xs:attribute name="client_inactivity_timeout" type="xs:integer" use="required"></xs:attribute>
+            <xs:attribute name="revert_timeout" type="xs:integer" use="required"></xs:attribute>
+            <xs:attribute name="vm_stalled_after_revert_timeout" type="xs:integer" use="required"></xs:attribute>
+            <xs:attribute name="vm_stalled_during_operation_timeout" type="xs:integer" use="required"></xs:attribute>
+            <xs:attribute name="same_vm_revert_delay" type="xs:integer" use="required"></xs:attribute>
+            <xs:attribute name="different_vm_revert_delay" type="xs:integer" use="required"></xs:attribute>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
