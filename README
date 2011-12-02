@@ -1,5 +1,5 @@
 HoneySpider Network Capture-HPC NG source code repository.
 Project is released under GPL 2.0 license.
 
-Build with maven2:
+Build server with maven2:
 mvn clean && mvn assembly:assembly

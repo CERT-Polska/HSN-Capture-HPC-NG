@@ -1,0 +1,4 @@
+
+#java -Xmx1024m  -Djava.net.preferIPv4Stack=true -cp CaptureServer-2.5.1.jar capture.Server  -s 192.168.1.1:7070 -f urlsToBeProcess.txt
+
+java -Xmx1024m  -Djava.net.preferIPv4Stack=true -cp hsn-capture-server-0.398.jar pl.nask.hsn.capture.server.Server -s 10.1.1.1:7070 -f urlsToBeProcess.txt
