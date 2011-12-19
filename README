@@ -3,3 +3,9 @@ Project is released under GPL 2.0 license.
 
 Build server with maven2:
 mvn clean && mvn assembly:assembly
+
+Sometimes maven can't find JMX in its repository. In such case download it from http://www.oracle.com/technetwork/java/javasebusiness/downloads/java-archive-downloads-java-plat-419418.html#7657-jmx-1.2.1-oth-JPR and install it in maven local repository. The jar files needed for the installation are in the 'lib' directory after unpacking.
+
+===Installation on RPM based distributions of Linux===
+The easiest way is to convert DEB package to RPM using alien:
+alien -r package_name.deb
