@@ -9,3 +9,5 @@ Sometimes maven can't find JMX in its repository. In such case download it from 
 ===Installation on RPM based distributions of Linux===
 The easiest way is to convert DEB package to RPM using alien:
 alien -r package_name.deb
+
+It will install but it won't start because the init script in init.d directory is prepared for Debian. One has to modify it or write new version just for RedHat/CentOS/etc...
