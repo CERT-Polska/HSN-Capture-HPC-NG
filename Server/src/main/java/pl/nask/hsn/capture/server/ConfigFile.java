@@ -125,6 +125,9 @@ public class ConfigFile implements Observer, ErrorHandler {
             event.attributes.put("type", serverMap.getNamedItem("type").getNodeValue());
             event.attributes.put("address", serverMap.getNamedItem("address").getNodeValue());
             event.attributes.put("vmsid", serverMap.getNamedItem("vmsid").getNodeValue());
+            event.attributes.put("port", serverMap.getNamedItem("port").getNodeValue());
+            event.attributes.put("username", serverMap.getNamedItem("username").getNodeValue());
+            event.attributes.put("password", serverMap.getNamedItem("password").getNodeValue());
             NodeList vmElements = globalList.item(i).getChildNodes();
             for (int k = 0; k < vmElements.getLength(); k++) {
                 if (vmElements.item(k).getNodeName().equals("virtual-machine")) {
